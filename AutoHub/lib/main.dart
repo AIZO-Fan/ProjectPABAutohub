@@ -31,10 +31,11 @@ class MyApp extends StatelessWidget {
       title: 'Movie App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
+          useMaterial3: true,
+        cardTheme: const CardThemeData(
+          color: Colors.white,
+          surfaceTintColor: Colors.transparent,
         ),
-        useMaterial3: true,
       ),
 
       // APP STARTS HERE

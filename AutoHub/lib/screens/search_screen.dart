@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:autohub/data/movie_data.dart';
-import 'package:autohub/models/movie.dart';
+import 'package:autohub/models/Movie.dart';
 import 'package:autohub/screens/detail_screen.dart';
 
 class SearchScreen extends StatefulWidget {

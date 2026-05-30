@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:autohub/models/movie.dart';
+import 'package:autohub/models/Movie.dart';
 
 class MovieDetailScreen extends StatefulWidget {
   final Movie movie;
