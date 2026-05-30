@@ -100,7 +100,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 backgroundColor: Colors.grey[200],
                 backgroundImage: _profileImage != null
                     ? FileImage(_profileImage!)
-                    : const AssetImage('images/profile.jpg') as ImageProvider,
+                    : const AssetImage('assets/images/profile.jpg') as ImageProvider,
                 child: _profileImage == null
                     ? const Icon(Icons.camera_alt, color: Colors.grey)
                     : null,
