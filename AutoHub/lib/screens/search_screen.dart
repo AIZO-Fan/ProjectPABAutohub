@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:autohub/data/movie_data.dart';
-import 'package:autohub/models/Movie.dart';
 import 'package:autohub/screens/detail_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:autohub/models/bengkel.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -11,651 +11,466 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  List<Movie> _filteredMovies = [];
+  final FirebaseFirestore _firestore =
+      FirebaseFirestore.instance;
+
+  final TextEditingController _searchController =
+      TextEditingController();
+
+  List<Bengkel> _allBengkels = [];
+  List<Bengkel> _filteredBengkels = [];
+
   String _searchQuery = '';
-  final TextEditingController _searchController = TextEditingController();
-  String? _selectedGenre;
-  String? _selectedAgeRating;
-  int? _selectedYear;
-  
-  final List<String> _allGenres = [];
-  final List<String> _allAgeRatings = [];
-  final List<int> _allYears = [];
+  String? _selectedKategori;
+
+  final List<String> kategoriList = [
+    'Servis Umum',
+    'AC Mobil',
+    'Suspensi',
+    'Rem',
+    'Transmisi',
+    'Body Repair',
+    'Cat Mobil',
+    'Radiator',
+    'Audio',
+    'Ban',
+    'ECU Specialist',
+  ];
 
   @override
   void initState() {
     super.initState();
-    
-    // Initialize dengan safety check
-    try {
-      _filteredMovies = List.from(movieList);
-      _extractFilterOptions();
-    } catch (e) {
-      print('Error initializing movie list: $e');
-      _filteredMovies = [];
-    }
-    
-    _searchController.addListener(_performSearch);
+
+    _loadBengkel();
+
+    _searchController.addListener(() {
+      _searchQuery = _searchController.text;
+      _filterData();
+    });
   }
 
-  void _extractFilterOptions() {
+  Future<void> _loadBengkel() async {
     try {
-      final genreSet = <String>{};
-      final ageRatingSet = <String>{};
-      final yearSet = <int>{};
+      final snapshot =
+          await _firestore.collection('bengkel').get();
 
-      if (movieList.isEmpty) return;
+      final data = snapshot.docs
+          .map((doc) => Bengkel.fromFirestore(doc))
+          .toList();
 
-      for (final movie in movieList) {
-        if (movie.genre.isNotEmpty) {
-          final genres = movie.genre.split(',').map((g) => g.trim()).toList();
-          for (final genre in genres) {
-            if (genre.isNotEmpty) {
-              genreSet.add(genre);
-            }
-          }
-        }
-        
-        if (movie.ageRating.isNotEmpty) {
-          ageRatingSet.add(movie.ageRating);
-        }
-        
-        yearSet.add(movie.releaseDate.year);
-      }
-
-      _allGenres.clear();
-      if (genreSet.isNotEmpty) {
-        _allGenres.addAll(genreSet.toList());
-        _allGenres.sort();
-      }
-      
-      _allAgeRatings.clear();
-      if (ageRatingSet.isNotEmpty) {
-        _allAgeRatings.addAll(ageRatingSet.toList());
-        _allAgeRatings.sort();
-      }
-      
-      _allYears.clear();
-      if (yearSet.isNotEmpty) {
-        _allYears.addAll(yearSet.toList());
-        _allYears.sort((a, b) => b.compareTo(a));
-      }
-      
-    } catch (e) {
-      print('Error extracting filter options: $e');
-    }
-  }
-
-  void _performSearch() {
-    try {
-      _searchQuery = _searchController.text.toLowerCase().trim();
-      
       setState(() {
-        if (movieList.isEmpty) {
-          _filteredMovies = [];
-          return;
-        }
-
-        _filteredMovies = movieList.where((movie) {
-          try {
-            if (movie.title.isEmpty) return false;
-            
-            bool matchesSearch = _searchQuery.isEmpty ||
-                movie.title.toLowerCase().contains(_searchQuery) ||
-                (movie.director.isNotEmpty && 
-                 movie.director.toLowerCase().contains(_searchQuery)) ||
-                (movie.genre.isNotEmpty && 
-                 movie.genre.toLowerCase().contains(_searchQuery));
-
-            bool matchesGenre = _selectedGenre == null ||
-                (movie.genre.isNotEmpty && 
-                 movie.genre.toLowerCase().contains(_selectedGenre!.toLowerCase()));
-
-            bool matchesAgeRating = _selectedAgeRating == null ||
-                movie.ageRating == _selectedAgeRating;
-
-            bool matchesYear = _selectedYear == null ||
-                movie.releaseDate.year == _selectedYear;
-
-            return matchesSearch && matchesGenre && matchesAgeRating && matchesYear;
-          } catch (e) {
-            return false;
-          }
-        }).toList();
+        _allBengkels = data;
+        _filteredBengkels = data;
       });
     } catch (e) {
-      print('Search error: $e');
+      debugPrint('Firestore Error: $e');
     }
   }
 
-  void _toggleFavorite(Movie movie) {
-    try {
-      setState(() {
-        final index = movieList.indexWhere((m) => m.title == movie.title);
-        if (index != -1) {
-          movieList[index].isFavorite = !movieList[index].isFavorite;
-          
-          final filteredIndex = _filteredMovies.indexWhere((m) => m.title == movie.title);
-          if (filteredIndex != -1) {
-            _filteredMovies[filteredIndex].isFavorite = movieList[index].isFavorite;
-          }
-        }
-      });
-    } catch (e) {
-      print('Toggle favorite error: $e');
-    }
+  void _filterData() {
+    setState(() {
+      _filteredBengkels =
+          _allBengkels.where((bengkel) {
+        final searchMatch =
+            bengkel.nama.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ) ||
+                bengkel.alamat.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                ) ||
+                bengkel.kategori.toLowerCase().contains(
+                  _searchQuery.toLowerCase(),
+                );
+
+        final kategoriMatch =
+            _selectedKategori == null ||
+            bengkel.kategori ==
+                _selectedKategori;
+
+        return searchMatch &&
+            kategoriMatch;
+      }).toList();
+    });
   }
 
-  void _cleautohublters() {
-    try {
-      setState(() {
-        _selectedGenre = null;
-        _selectedAgeRating = null;
-        _selectedYear = null;
-        _searchController.clear();
-      });
-      _performSearch();
-    } catch (e) {
-      print('Clear filters error: $e');
-    }
-  }
-
-  Widget _buildMovieImage(Movie movie) {
-    return Container(
-      width: 80,
-      height: 120,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
-        color: Colors.grey[200],
+  Widget _buildKategoriChip(
+      String kategori) {
+    return FilterChip(
+      label: Text(kategori),
+      selected:
+          _selectedKategori == kategori,
+      selectedColor:
+          Colors.blue.shade600,
+      checkmarkColor: Colors.white,
+      labelStyle: TextStyle(
+        color:
+            _selectedKategori == kategori
+                ? Colors.white
+                : Colors.black,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.asset(
-          movie.posterAsset,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return Container(
-              color: Colors.grey[200],
-              child: const Center(
-                child: Icon(
-                  Icons.movie,
-                  size: 30,
-                  color: Colors.grey,
+      onSelected: (value) {
+        setState(() {
+          _selectedKategori =
+              value ? kategori : null;
+        });
+
+        _filterData();
+      },
+    );
+  }
+
+  Widget _buildBengkelCard(
+      Bengkel bengkel) {
+    return Card(
+      elevation: 5,
+      shadowColor: Colors.black12,
+      margin:
+          const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.circular(16),
+      ),
+      child: InkWell(
+        borderRadius:
+            BorderRadius.circular(16),
+        onTap: () {
+          ScaffoldMessenger.of(context)
+              .showSnackBar(
+            SnackBar(
+              content:
+                  Text(bengkel.nama),
+            ),
+          );
+        },
+        child: Padding(
+          padding:
+              const EdgeInsets.all(12),
+          child: Row(
+            crossAxisAlignment:
+                CrossAxisAlignment.start,
+            children: [
+              ClipRRect(
+                borderRadius:
+                    BorderRadius.circular(
+                        12),
+                child: Image.asset(
+                  'assets/images/${bengkel.image}',
+                  width: 120,
+                  height: 100,
+                  fit: BoxFit.cover,
                 ),
               ),
-            );
-          },
+
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment:
+                      CrossAxisAlignment
+                          .start,
+                  children: [
+                    Text(
+                      bengkel.nama,
+                      style:
+                          const TextStyle(
+                        fontSize: 16,
+                        fontWeight:
+                            FontWeight
+                                .bold,
+                      ),
+                    ),
+
+                    const SizedBox(
+                        height: 4),
+
+                    Text(
+                      bengkel.alamat,
+                      style:
+                          const TextStyle(
+                        color:
+                            Colors.grey,
+                        fontSize: 12,
+                      ),
+                    ),
+
+                    const SizedBox(
+                        height: 8),
+
+                    Text(
+                      bengkel.deskripsi,
+                      maxLines: 2,
+                      overflow:
+                          TextOverflow
+                              .ellipsis,
+                      style:
+                          const TextStyle(
+                        fontSize: 13,
+                      ),
+                    ),
+
+                    const SizedBox(
+                        height: 10),
+
+                    Wrap(
+                      spacing: 8,
+                      crossAxisAlignment:
+                          WrapCrossAlignment
+                              .center,
+                      children: [
+                        Container(
+                          padding:
+                              const EdgeInsets
+                                  .symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration:
+                              BoxDecoration(
+                            color: Colors
+                                .blue
+                                .shade50,
+                            borderRadius:
+                                BorderRadius
+                                    .circular(
+                                        20),
+                          ),
+                          child: Text(
+                            bengkel
+                                .kategori,
+                            style:
+                                const TextStyle(
+                              fontSize:
+                                  11,
+                            ),
+                          ),
+                        ),
+
+                        Row(
+                          mainAxisSize:
+                              MainAxisSize
+                                  .min,
+                          children: [
+                            const Icon(
+                              Icons.star,
+                              color: Colors
+                                  .orange,
+                              size: 16,
+                            ),
+                            const SizedBox(
+                                width: 3),
+                            Text(
+                              bengkel
+                                  .rating
+                                  .toString(),
+                              style:
+                                  const TextStyle(
+                                fontWeight:
+                                    FontWeight
+                                        .w600,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        Icon(
+                          bengkel.favorite
+                              ? Icons
+                                  .favorite
+                              : Icons
+                                  .favorite_border,
+                          color: bengkel
+                                  .favorite
+                              ? Colors.red
+                              : Colors
+                                  .black54,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Color _getAgeRatingColor(String rating) {
-    switch (rating) {
-      case 'Semua Umur':
-        return Colors.green;
-      case '13+':
-        return Colors.orange;
-      case '17+':
-        return Colors.red;
-      default:
-        return Colors.blue;
-    }
-  }
+  @override
+  Widget build(
+      BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.white,
 
-  Widget _buildFilterChip({
-    required String label,
-    required bool selected,
-    required VoidCallback onSelected,
-  }) {
-      return Padding(
-        padding: const EdgeInsets.only(right: 8),
-        child: FilterChip(
-          label: Text(label),
-          selected: selected,
-          onSelected: (_) => onSelected(),
-          selectedColor: Colors.blue,
-          checkmarkColor: Colors.white,
-          labelStyle: TextStyle(
-            color: selected ? Colors.white : Colors.black,
-          ),
-        ),
-      );
-    }
-
-    @override
-    Widget build(BuildContext context) {
-      return Scaffold(
+      appBar: AppBar(
         backgroundColor: Colors.white,
-        appBar: AppBar(
-          automaticallyImplyLeading: false,
-          title: const Text(
-          'Search Movies',
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          'Search',
           style: TextStyle(
-            fontWeight: FontWeight.bold),
+            color: Colors.black,
+            fontWeight:
+                FontWeight.bold,
           ),
-          backgroundColor: Colors.white,
-          centerTitle: true,
-          actions: [
-            if (_selectedGenre != null || _selectedAgeRating != null || _selectedYear != null || _searchQuery.isNotEmpty)
-              IconButton(
-                icon: const Icon(Icons.filter_alt_off),
-                onPressed: _cleautohublters,
-                tooltip: 'Clear all filters',
-              ),
-          ],
-        ),
-        
-        body: Column(
-          children: [
-            Padding(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    child: TextField(
-      controller: _searchController,
-      onChanged: (_) => _performSearch(),
-      decoration: InputDecoration(
-        hintText: 'Search',
-        prefixIcon: const Icon(Icons.search),
-        suffixIcon: _searchController.text.isNotEmpty
-            ? IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () {
-                  _searchController.clear();
-                  _performSearch();
-                },
-              )
-            : null,
-        filled: true,
-        fillColor: Colors.grey.shade200,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(30),
-          borderSide: BorderSide.none,
         ),
       ),
-    ),
-  ),
 
-
-          // Filter Section
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                _buildFilterChip(
-                  label: 'All',
-                  selected: _selectedGenre == null && _selectedAgeRating == null && _selectedYear == null,
-                  onSelected: () {
-                    setState(() {
-                      _selectedGenre = null;
-                      _selectedAgeRating = null;
-                      _selectedYear = null;
-                    });
-                    _performSearch();
-                  },
-                ),
-                
-                if (_allGenres.isNotEmpty)
-                  PopupMenuButton<String>(
-                    onSelected: (value) {
-                      setState(() {
-                        _selectedGenre = value == 'All' ? null : value;
-                      });
-                      _performSearch();
-                    },
-                    itemBuilder: (context) {
-                      final items = <PopupMenuItem<String>>[
-                        const PopupMenuItem(value: 'All', child: Text('All Genres')),
-                      ];
-                      
-                      for (final genre in _allGenres) {
-                        items.add(PopupMenuItem(value: genre, child: Text(genre)));
-                      }
-                      
-                      return items;
-                    },
-                    child: Chip(
-                      label: Row(
-                        children: [
-                          const Icon(Icons.category, size: 16),
-                          const SizedBox(width: 4),
-                          Text(_selectedGenre ?? 'Genre'),
-                        ],
-                      ),
-                      backgroundColor: _selectedGenre != null ? Colors.blue[100] : null,
-                    ),
-                  ),
-                
-                if (_allGenres.isNotEmpty) const SizedBox(width: 8),
-                
-                if (_allAgeRatings.isNotEmpty)
-                  PopupMenuButton<String>(
-                    onSelected: (value) {
-                      setState(() {
-                        _selectedAgeRating = value == 'All' ? null : value;
-                      });
-                      _performSearch();
-                    },
-                    itemBuilder: (context) {
-                      final items = <PopupMenuItem<String>>[
-                        const PopupMenuItem(value: 'All', child: Text('All Ratings')),
-                      ];
-                      
-                      for (final rating in _allAgeRatings) {
-                        items.add(PopupMenuItem(value: rating, child: Text(rating)));
-                      }
-                      
-                      return items;
-                    },
-                    child: Chip(
-                      label: Row(
-                        children: [
-                          const Icon(Icons.numbers, size: 16),
-                          const SizedBox(width: 4),
-                          Text(_selectedAgeRating ?? 'Rating'),
-                        ],
-                      ),
-                      backgroundColor: _selectedAgeRating != null ? Colors.green[100] : null,
-                    ),
-                  ),
-                
-                if (_allAgeRatings.isNotEmpty) const SizedBox(width: 8),
-                
-                if (_allYears.isNotEmpty)
-                  PopupMenuButton<int>(
-                    onSelected: (value) {
-                      setState(() {
-                        _selectedYear = value == -1 ? null : value;
-                      });
-                      _performSearch();
-                    },
-                    itemBuilder: (context) {
-                      final items = <PopupMenuItem<int>>[
-                        const PopupMenuItem(value: -1, child: Text('All Years')),
-                      ];
-                      
-                      for (final year in _allYears) {
-                        items.add(PopupMenuItem(value: year, child: Text(year.toString())));
-                      }
-                      
-                      return items;
-                    },
-                    child: Chip(
-                      label: Row(
-                        children: [
-                          const Icon(Icons.calendar_today, size: 16),
-                          const SizedBox(width: 4),
-                          Text(_selectedYear != null ? _selectedYear.toString() : 'Year'),
-                        ],
-                      ),
-                      backgroundColor: _selectedYear != null ? Colors.orange[100] : null,
-                    ),
-                  ),
-              ],
-            ),
+      body: Column(
+        children: [
+          Padding(
+            padding:
+                const EdgeInsets.all(
+                    16),
+            // child:
+                // _buildBannerSlider(),
           ),
 
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding:
+                const EdgeInsets
+                    .symmetric(
+              horizontal: 16,
+            ),
+            child: TextField(
+              controller:
+                  _searchController,
+              decoration:
+                  InputDecoration(
+                hintText: 'Search',
+                prefixIcon:
+                    const Icon(
+                  Icons.search,
+                ),
+                filled: true,
+                fillColor:
+                    Colors.grey
+                        .shade200,
+                border:
+                    OutlineInputBorder(
+                  borderRadius:
+                      BorderRadius
+                          .circular(
+                              30),
+                  borderSide:
+                      BorderSide
+                          .none,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          Padding(
+            padding:
+                const EdgeInsets
+                    .symmetric(
+              horizontal: 16,
+            ),
+            child: Align(
+              alignment:
+                  Alignment
+                      .centerLeft,
+              child: Text(
+                'Spesialis',
+                style:
+                    const TextStyle(
+                  fontWeight:
+                      FontWeight
+                          .bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          Padding(
+            padding:
+                const EdgeInsets
+                    .symmetric(
+              horizontal: 16,
+            ),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: kategoriList
+                  .map(
+                    (kategori) =>
+                        _buildKategoriChip(
+                            kategori),
+                  )
+                  .toList(),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          Padding(
+            padding:
+                const EdgeInsets
+                    .symmetric(
+              horizontal: 16,
+            ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment:
+                  MainAxisAlignment
+                      .spaceBetween,
               children: [
-                Text(
-                  '${_filteredMovies.length} movies found',
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                const Text(
+                  'Recommendation',
+                  style:
+                      TextStyle(
+                    fontSize: 18,
+                    fontWeight:
+                        FontWeight
+                            .bold,
                   ),
                 ),
-                if (_searchQuery.isNotEmpty)
-                  Text(
-                    '"$_searchQuery"',
-                    style: const TextStyle(
-                      color: Colors.blue,
-                      fontSize: 14,
-                      fontStyle: FontStyle.italic,
-                    ),
+                Text(
+                  '${_filteredBengkels.length} bengkel',
+                  style:
+                      const TextStyle(
+                    color:
+                        Colors.grey,
                   ),
+                ),
               ],
             ),
           ),
 
+          const SizedBox(height: 10),
+
           Expanded(
-            child: _filteredMovies.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(
-                          Icons.search_off,
-                          size: 80,
-                          color: Colors.grey,
+            child:
+                _filteredBengkels
+                        .isEmpty
+                    ? const Center(
+                        child: Text(
+                          'Bengkel tidak ditemukan',
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _searchQuery.isEmpty && 
-                          _selectedGenre == null && 
-                          _selectedAgeRating == null && 
-                          _selectedYear == null
-                              ? 'Start searching for movies'
-                              : 'No movies found',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        if (_searchQuery.isNotEmpty || 
-                            _selectedGenre != null || 
-                            _selectedAgeRating != null || 
-                            _selectedYear != null)
-                          TextButton(
-                            onPressed: _cleautohublters,
-                            child: const Text('Clear filters'),
-                          ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.only(bottom: 16),
-                    itemCount: _filteredMovies.length,
-                    itemBuilder: (context, index) {
-                      if (index < 0 || index >= _filteredMovies.length) {
-                        return const SizedBox.shrink();
-                      }
-                      
-                      try {
-                        final movie = _filteredMovies[index];
-                        
-                        if (movie.title.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-                        
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 6,
-                          ),
-                          child: Material(
-                            borderRadius: BorderRadius.circular(12),
-                            elevation: 2,
-                            color: Colors.white,
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(12),
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        MovieDetailScreen(movie: movie),
-                                  ),
-                                );
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildMovieImage(movie),
-                                    
-                                    const SizedBox(width: 12),
-                                    
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      movie.title,
-                                                      style: const TextStyle(
-                                                        fontSize: 16,
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                      maxLines: 2,
-                                                      overflow: TextOverflow.ellipsis,
-                                                    ),
-                                                    const SizedBox(height: 4),
-                                                    Text(
-                                                      movie.director,
-                                                      style: const TextStyle(
-                                                        fontSize: 13,
-                                                        color: Colors.grey,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              IconButton(
-                                                icon: Icon(
-                                                  movie.isFavorite
-                                                      ? Icons.favorite
-                                                      : Icons.favorite_border,
-                                                  color: movie.isFavorite
-                                                      ? Colors.red
-                                                      : Colors.grey,
-                                                  size: 20,
-                                                ),
-                                                onPressed: () => _toggleFavorite(movie),
-                                                padding: EdgeInsets.zero,
-                                                constraints: const BoxConstraints(),
-                                              ),
-                                            ],
-                                          ),
-                                          
-                                          const SizedBox(height: 8),
-                                          
-                                          Wrap(
-                                            spacing: 8,
-                                            runSpacing: 4,
-                                            children: [
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                  horizontal: 8,
-                                                  vertical: 2,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: _getAgeRatingColor(
-                                                      movie.ageRating),
-                                                  borderRadius:
-                                                      BorderRadius.circular(4),
-                                                ),
-                                                child: Text(
-                                                  movie.ageRating,
-                                                  style: const TextStyle(
-                                                    fontSize: 11,
-                                                    color: Colors.white,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                              
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                  horizontal: 8,
-                                                  vertical: 2,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.grey[200],
-                                                  borderRadius:
-                                                      BorderRadius.circular(4),
-                                                ),
-                                                child: Text(
-                                                  movie.releaseDate.year.toString(),
-                                                  style: const TextStyle(
-                                                    fontSize: 11,
-                                                    color: Colors.grey,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                              
-                                              Container(
-                                                padding: const EdgeInsets.symmetric(
-                                                  horizontal: 8,
-                                                  vertical: 2,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.blue[50],
-                                                  borderRadius:
-                                                      BorderRadius.circular(4),
-                                                ),
-                                                child: Text(
-                                                  movie.duration,
-                                                  style: const TextStyle(
-                                                    fontSize: 11,
-                                                    color: Colors.blue,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                          
-                                          const SizedBox(height: 8),
-                                          
-                                          Text(
-                                            movie.genre,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              color: Colors.grey,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          
-                                          const SizedBox(height: 8),
-                                          
-                                          Text(
-                                            movie.description,
-                                            style: const TextStyle(fontSize: 13),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      } catch (e) {
-                        print('Error building movie item at index $index: $e');
-                        return const SizedBox.shrink();
-                      }
-                    },
-                  ),
+                      )
+                    : ListView
+                        .builder(
+                        padding:
+                            const EdgeInsets
+                                .all(
+                                    16),
+                        itemCount:
+                            _filteredBengkels
+                                .length,
+                        itemBuilder:
+                            (context,
+                                index) {
+                          return _buildBengkelCard(
+                            _filteredBengkels[
+                                index],
+                          );
+                        },
+                      ),
           ),
         ],
       ),

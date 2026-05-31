@@ -5,14 +5,20 @@ class Bengkel {
   final String nama;
   final String kategori;
   final String alamat;
-  final String gambar;
+  final String deskripsi;
+  final String image;
+  final double rating;
+  final bool favorite;
 
   Bengkel({
     required this.id,
     required this.nama,
     required this.kategori,
     required this.alamat,
-    required this.gambar,
+    required this.deskripsi,
+    required this.image,
+    required this.rating,
+    required this.favorite,
   });
 
   factory Bengkel.fromFirestore(
@@ -25,7 +31,10 @@ class Bengkel {
       nama: data['nama'] ?? '',
       kategori: data['kategori'] ?? '',
       alamat: data['alamat'] ?? '',
-      gambar: data['gambar'] ?? '',
+      deskripsi: data['deskripsi'] ?? '',
+      image: data['image'] ?? '',
+      rating: (data['rating'] ?? 0).toDouble(),
+      favorite: data['favorite'] ?? false,
     );
   }
 }
