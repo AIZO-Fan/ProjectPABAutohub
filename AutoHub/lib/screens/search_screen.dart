@@ -25,15 +25,15 @@ class _SearchScreenState extends State<SearchScreen> {
 
   final List<String> kategoriList = [
     'Servis Umum',
-    'AC Mobil',
-    'Suspensi',
-    'Rem',
+    'servis motor',
+    'Ganti Oli',
+    'Kelistrikan',
     'Transmisi',
     'Body Repair',
     'Cat Mobil',
     'Radiator',
     'Audio',
-    'Ban',
+    'Ban & Kaki-kaki',
     'ECU Specialist',
   ];
 
