@@ -28,9 +28,7 @@ class _SearchScreenState extends State<SearchScreen> {
     'servis motor',
     'Ganti Oli',
     'Kelistrikan',
-    'Transmisi',
     'Body Repair',
-    'Cat Mobil',
     'Radiator',
     'Audio',
     'Ban & Kaki-kaki',
@@ -134,11 +132,21 @@ class _SearchScreenState extends State<SearchScreen> {
         borderRadius:
             BorderRadius.circular(16),
         onTap: () {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(
-            SnackBar(
-              content:
-                  Text(bengkel.nama),
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => DetailScreen(
+                bengkelData: {
+                  'nama': bengkel.nama,
+                  'alamat': bengkel.alamat,
+                  'kategori': bengkel.kategori,
+                  'deskripsi': bengkel.deskripsi,
+                  'rating': bengkel.rating,
+                  'image': bengkel.image,
+                  'favorite': bengkel.favorite,
+                },
+                documentId: bengkel.id,
+              ),
             ),
           );
         },

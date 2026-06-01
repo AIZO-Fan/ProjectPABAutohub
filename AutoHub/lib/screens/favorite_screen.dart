@@ -1,217 +1,185 @@
 import 'package:flutter/material.dart';
-import 'package:autohub/data/user_data.dart';
-import 'package:autohub/models/bengkel.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:autohub/screens/detail_screen.dart';
 
-class FavoriteScreen extends StatefulWidget {
+class FavoriteScreen extends StatelessWidget {
   const FavoriteScreen({super.key});
 
   @override
-  State<FavoriteScreen> createState() => _FavoriteScreenState();
-}
-
-class _FavoriteScreenState extends State<FavoriteScreen> {
-  List<Bengkel> bengkelFavorite = [];
-
-  void _loadFavorites() {
-    bengkelFavorite = [];
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadFavorites();
-  }
-
-  Color _ageColor(String rating) {
-    switch (rating) {
-      case 'Semua Umur':
-        return Colors.green;
-      case '13+':
-        return Colors.orange;
-      case '17+':
-        return Colors.red;
-      default:
-        return Colors.blue;
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
-    _loadFavorites();
-
     return Scaffold(
       backgroundColor: Colors.white,
+
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: const Text(
           'Favorite',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
         backgroundColor: Colors.white,
-        elevation: 0,
       ),
-      body: bengkelFavorite.isEmpty
-          ? const Center(
-              child: Text(
-                'Belum ada Bengkel favorit ❤️',
-                style: TextStyle(fontSize: 18),
-              ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(12),
-              itemCount: bengkelFavorite.length,
-              itemBuilder: (context, index) {
-                final bengkel = bengkelFavorite[index];
 
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Material(
-                    elevation: 2,
-                    color: Colors.white,                
-                    surfaceTintColor: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(16),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) =>
-                                DetailScreen(),
-                          ),
-                        );
-                      },
-                      child: Padding(
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('bengkel')
+            .where('favorite', isEqualTo: true)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Center(
+              child: Text('Terjadi Kesalahan'),
+            );
+          }
+
+          if (snapshot.connectionState ==
+              ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          final docs = snapshot.data!.docs;
+
+          if (docs.isEmpty) {
+            return const Center(
+              child: Text(
+                'Belum ada bengkel favorit ❤️',
+              ),
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(12),
+            itemCount: docs.length,
+            itemBuilder: (context, index) {
+              final data =
+                  docs[index].data()
+                      as Map<String, dynamic>;
+
+              final imageName =
+                  data['image'] ??
+                  data['gambar'] ??
+                  'bengkel1.jpg';
+
+              return Card(
+                elevation: 3,
+                margin: const EdgeInsets.only(bottom: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(15),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => DetailScreen(
+                          bengkelData: data,
+                          documentId: docs[index].id,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(15),
+                          topRight: Radius.circular(15),
+                        ),
+                        child: Image.asset(
+                          'assets/images/$imageName',
+                          height: 180,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+
+                      Padding(
                         padding: const EdgeInsets.all(12),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Column(
+                          crossAxisAlignment:
+                              CrossAxisAlignment.start,
                           children: [
-                            // POSTER
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.asset(
-                                bengkel.image,
-                                width: 90,
-                                height: 130,
-                                fit: BoxFit.cover,
+                            Row(
+                              mainAxisAlignment:
+                                  MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    data['nama'] ?? '-',
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight:
+                                          FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+
+                                const Icon(
+                                  Icons.favorite,
+                                  color: Colors.red,
+                                ),
+                              ],
+                            ),
+
+                            const SizedBox(height: 8),
+
+                            Container(
+                              padding:
+                                  const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.blue.shade100,
+                                borderRadius:
+                                    BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                data['kategori'] ?? '-',
                               ),
                             ),
 
-                            const SizedBox(width: 12),
+                            const SizedBox(height: 10),
 
-                            // INFO
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          bengkel.nama,
-                                          style: const TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                      Icon(
-                                        Icons.favorite,
-                                        color: Colors.red,
-                                      ),
-                                    ],
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.location_on,
+                                  color: Colors.red,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 5),
+                                Expanded(
+                                  child: Text(
+                                    data['alamat'] ?? '-',
                                   ),
+                                ),
+                              ],
+                            ),
 
-                                  const SizedBox(height: 4),
+                            const SizedBox(height: 10),
 
-                                  Text(
-                                    bengkel.kategori,
-                                    style: const TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 13,
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 8),
-
-                                  // TAGS
-                                  Wrap(
-                                    spacing: 8,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 2,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color:
-                                              Colors.amber,
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                        ),
-                                        child:Text("⭐ ${bengkel.rating}",
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                        _infoChip(bengkel.kategori),
-                                    ],
-                                  ),
-
-                                  const SizedBox(height: 6),
-
-                                  Text(
-                                    bengkel.kategori,
-                                    style: const TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey,
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 6),
-
-                                  Text(
-                                    bengkel.deskripsi,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style:
-                                        const TextStyle(fontSize: 13),
-                                  ),
-                                ],
-                              ),
+                            Text(
+                              data['deskripsi'] ?? '',
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ],
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                );
-              },
-            ),
-    );
-  }
-
-  Widget _infoChip(String text) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade200,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          color: Colors.grey,
-        ),
+                ),
+              );
+            },
+          );
+        },
       ),
     );
   }

@@ -1,210 +1,372 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-class DetailScreen extends StatelessWidget {
-  const DetailScreen({super.key});
+class DetailScreen extends StatefulWidget {
+  final Map<String, dynamic> bengkelData;
+  final String documentId;
+
+  const DetailScreen({
+    super.key,
+    required this.bengkelData,
+    required this.documentId,
+  });
+
+  @override
+  State<DetailScreen> createState() => _DetailScreenState();
+}
+
+class _DetailScreenState extends State<DetailScreen> {
+  late bool isFavorite;
+  bool isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    isFavorite = widget.bengkelData['favorite'] ?? false;
+  }
+
+  Future<void> toggleFavorite() async {
+    if (isLoading) return;
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final newValue = !isFavorite;
+
+      await FirebaseFirestore.instance
+          .collection('bengkel')
+          .doc(widget.documentId)
+          .update({
+        'favorite': newValue,
+      });
+
+      setState(() {
+        isFavorite = newValue;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            newValue
+                ? 'Ditambahkan ke favorit ❤️'
+                : 'Dihapus dari favorit',
+          ),
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Gagal mengubah favorit: $e',
+          ),
+        ),
+      );
+    }
+
+    setState(() {
+      isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text(
-          'Detail Screen masih dalam pengembangan',
+    print(widget.bengkelData);
+    final imageName =
+        widget.bengkelData['image'] ??
+        widget.bengkelData['gambar'] ??
+        'bengkel1.jpg';
+
+    final double latitude =
+    (widget.bengkelData['latitude'] as num?)?.toDouble() ?? -2.990934;
+
+    final double longitude =
+    (widget.bengkelData['longitude'] as num?)?.toDouble() ?? 104.756554;
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          "About",
+          style: TextStyle(
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        iconTheme: const IconThemeData(
+          color: Colors.black,
+        ),
+      ),
+
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Column(
+                children: [
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius:
+                            const BorderRadius.only(
+                          topLeft: Radius.circular(15),
+                          topRight: Radius.circular(15),
+                        ),
+                        child: Image.asset(
+                          'assets/images/$imageName',
+                          width: double.infinity,
+                          height: 220,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+
+                      Positioned(
+                        top: 10,
+                        left: 10,
+                        child: Row(
+                          children: [
+                            CircleAvatar(
+                              backgroundColor: Colors.red,
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.call,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {},
+                              ),
+                            ),
+
+                            const SizedBox(width: 10),
+
+                            CircleAvatar(
+                              backgroundColor: Colors.green,
+                              child: IconButton(
+                                icon: const Icon(
+                                  Icons.chat,
+                                  color: Colors.white,
+                                ),
+                                onPressed: () {},
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: CircleAvatar(
+                          backgroundColor: Colors.white,
+                          child: isLoading
+                              ? const Padding(
+                                  padding:
+                                      EdgeInsets.all(10),
+                                  child:
+                                      CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : IconButton(
+                                  onPressed:
+                                      toggleFavorite,
+                                  icon: Icon(
+                                    isFavorite
+                                        ? Icons.favorite
+                                        : Icons
+                                            .favorite_border,
+                                    color: Colors.red,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      mainAxisAlignment:
+                          MainAxisAlignment
+                              .spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            widget.bengkelData['nama'] ??
+                                '-',
+                            style:
+                                const TextStyle(
+                              fontSize: 20,
+                              fontWeight:
+                                  FontWeight.bold,
+                            ),
+                          ),
+                        ),
+
+                        Row(
+                          children: [
+                            const Icon(
+                              Icons.star,
+                              color: Colors.orange,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              "${widget.bengkelData['rating'] ?? 0}/10",
+                              style:
+                                  const TextStyle(
+                                fontWeight:
+                                    FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              "Deskripsi",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius:
+                    BorderRadius.circular(15),
+              ),
+              child: Text(
+                widget.bengkelData['deskripsi'] ??
+                    "Belum ada deskripsi.",
+                style: const TextStyle(
+                  fontSize: 16,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              "Informasi",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            Card(
+              color: Colors.grey.shade100,
+              child: Padding(
+                padding: const EdgeInsets.all(15),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.location_on,
+                          color: Colors.red,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            widget.bengkelData['alamat'] ??
+                                '-',
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.category,
+                          color: Colors.blue,
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          widget.bengkelData['kategori'] ??
+                              '-',
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            const Text(
+              "Lokasi",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
+            ),
+
+            const SizedBox(height: 10),
+
+            SizedBox(
+              height: 250,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: GoogleMap(
+                  initialCameraPosition: CameraPosition(
+                    target: LatLng(
+                      latitude,
+                      longitude,
+                    ),
+                    zoom: 15,
+                  ),
+                  markers: {
+                    Marker(
+                      markerId: const MarkerId('bengkel'),
+                      position: LatLng(
+                        latitude,
+                        longitude,
+                      ),
+                      infoWindow: InfoWindow(
+                        title: widget.bengkelData['nama'],
+                        snippet: widget.bengkelData['alamat'],
+                      ),
+                    ),
+                  },
+                  zoomControlsEnabled: true,
+                  myLocationButtonEnabled: false,
+                  mapToolbarEnabled: true,
+                ),
+              ),
+            ),
+            const SizedBox(height: 30),
+          ],
         ),
       ),
     );
   }
 }
-// import 'package:flutter/material.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-// import 'package:autohub/models/Movie.dart';
-
-// class MovieDetailScreen extends StatefulWidget {
-//   final Movie movie;
-//   const MovieDetailScreen({super.key, required this.movie});
-
-//   @override
-//   State<MovieDetailScreen> createState() => _MovieDetailScreenState();
-// }
-
-// class _MovieDetailScreenState extends State<MovieDetailScreen> {
-//   bool isFavorite = false;
-
-//   // ================== LOAD FAVORITE ==================
-//   void _loadFavorite() async {
-//     final prefs = await SharedPreferences.getInstance();
-//     setState(() {
-//       isFavorite =
-//           prefs.getBool("favorite_${widget.movie.title}") ?? false;
-//     });
-//   }
-
-//   // ================== TOGGLE FAVORITE ==================
-//   void _toggleFavorite() async {
-//     final prefs = await SharedPreferences.getInstance();
-//     final newValue = !isFavorite;
-
-//     await prefs.setBool("favorite_${widget.movie.title}", newValue);
-
-//     setState(() {
-//       isFavorite = newValue;
-//       widget.movie.isFavorite = newValue; // 🔥 sinkron ke list
-//     });
-//   }
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _loadFavorite();
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       backgroundColor: Colors.white,
-//       appBar: AppBar(
-//         backgroundColor: Colors.white,
-//         title: const Text("About Film"),
-//         leading: IconButton(
-//           icon: const Icon(Icons.arrow_back),
-//           onPressed: () => Navigator.pop(context, true),
-//         ),
-//       ),
-//       body: SingleChildScrollView(
-//         padding: const EdgeInsets.all(16),
-//         child: Column(
-//           crossAxisAlignment: CrossAxisAlignment.start,
-//           children: [
-//             // ================== CARD ATAS ==================
-//             Container(
-//               padding: const EdgeInsets.all(12),
-//               decoration: BoxDecoration(
-//                 color: Colors.grey.shade100,
-//                 borderRadius: BorderRadius.circular(16),
-//               ),
-//               child: Row(
-//                 children: [
-//                   // Poster
-//                   ClipRRect(
-//                     borderRadius: BorderRadius.circular(12),
-//                     child: Image.asset(
-//                       widget.movie.posterAsset,
-//                       width: 90,
-//                       height: 130,
-//                       fit: BoxFit.cover,
-//                     ),
-//                   ),
-//                   const SizedBox(width: 12),
-
-//                   // Info
-//                   Expanded(
-//                     child: Column(
-//                       crossAxisAlignment: CrossAxisAlignment.start,
-//                       children: [
-//                         Row(
-//                           mainAxisAlignment:
-//                               MainAxisAlignment.spaceBetween,
-//                           children: [
-//                             Expanded(
-//                               child: Text(
-//                                 widget.movie.title,
-//                                 style: const TextStyle(
-//                                   fontSize: 16,
-//                                   fontWeight: FontWeight.bold,
-//                                 ),
-//                               ),
-//                             ),
-//                             IconButton(
-//                               onPressed: _toggleFavorite,
-//                               icon: Icon(
-//                                 Icons.favorite,
-//                                 color: isFavorite
-//                                     ? Colors.red
-//                                     : Colors.grey,
-//                               ),
-//                             ),
-//                           ],
-//                         ),
-//                         Text(
-//                           widget.movie.genre,
-//                           style:
-//                               const TextStyle(color: Colors.grey),
-//                         ),
-//                         const SizedBox(height: 6),
-//                         Text(
-//                           "Release Date : "
-//                           "${widget.movie.releaseDate.day} "
-//                           "${_month(widget.movie.releaseDate.month)} "
-//                           "${widget.movie.releaseDate.year}",
-//                           style: const TextStyle(fontSize: 12),
-//                         ),
-//                         const SizedBox(height: 4),
-//                         Text(
-//                           "Age ${widget.movie.ageRating}",
-//                           style: const TextStyle(fontSize: 12),
-//                         ),
-//                         const SizedBox(height: 8),
-//                         Row(
-//                           children: const [
-//                             Icon(Icons.star,
-//                                 color: Colors.orange, size: 18),
-//                             SizedBox(width: 4),
-//                             Text(
-//                               "9 /10",
-//                               style: TextStyle(
-//                                   fontWeight: FontWeight.bold),
-//                             ),
-//                           ],
-//                         ),
-//                       ],
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-
-//             const SizedBox(height: 20),
-
-//             // ================== SINOPSIS ==================
-//             const Text(
-//               "Sinopsis",
-//               style:
-//                   TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-//             ),
-//             const SizedBox(height: 8),
-
-//             Container(
-//               padding: const EdgeInsets.all(14),
-//               decoration: BoxDecoration(
-//                 color: Colors.grey.shade100,
-//                 borderRadius: BorderRadius.circular(16),
-//               ),
-//               child: Text(
-//                 widget.movie.description,
-//                 style: const TextStyle(height: 1.5),
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   String _month(int m) {
-//     const months = [
-//       "January",
-//       "February",
-//       "March",
-//       "April",
-//       "May",
-//       "June",
-//       "July",
-//       "August",
-//       "September",
-//       "October",
-//       "November",
-//       "December",
-//     ];
-//     return months[m - 1];
-//   }
-// }
