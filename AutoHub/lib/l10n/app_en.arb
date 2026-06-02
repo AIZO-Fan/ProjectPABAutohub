@@ -1,0 +1,10 @@
+{
+  "@@locale": "en",
+  "appTitle": "AutoHub",
+  "home": "Home",
+  "search": "Search",
+  "favorite": "Favorite",
+  "profile": "Profile",
+  "language": "Language",
+  "theme": "Theme"
+}

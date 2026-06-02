@@ -1,5 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
+
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:autohub/l10n/app_localizations.dart';
+
+import 'package:autohub/providers/theme_provider.dart';
+import 'package:autohub/providers/language_provider.dart';
+
 import 'firebase_options.dart';
 
 import 'package:autohub/helpers/scroll_behavior.dart';
@@ -18,7 +26,18 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const MyApp());
+  runApp(  MultiProvider(
+    providers: [
+      ChangeNotifierProvider(
+        create: (_) => ThemeProvider(),
+      ),
+      ChangeNotifierProvider(
+        create: (_) => LanguageProvider(),
+      ),
+    ],
+    child: const MyApp(),
+  ),
+);
 }
 
 class MyApp extends StatelessWidget {
@@ -26,17 +45,43 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final languageProvider = Provider.of<LanguageProvider>(context);
     return MaterialApp(
       scrollBehavior: AppScrollBehavior(),
       title: 'Movie App',
       debugShowCheckedModeBanner: false,
+     themeMode: themeProvider.themeMode,
+
       theme: ThemeData(
+<<<<<<< Updated upstream
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.deepPurple,
+=======
+        useMaterial3: true,
+        cardTheme: const CardThemeData(
+          color: Colors.white,
+          surfaceTintColor: Colors.transparent,
+>>>>>>> Stashed changes
         ),
         useMaterial3: true,
       ),
 
+      darkTheme: ThemeData.dark(),
+
+      locale: languageProvider.locale,
+
+      supportedLocales: const [
+        Locale('id'),
+        Locale('en'),
+      ],
+
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       // APP STARTS HERE
       initialRoute: '/',
 
