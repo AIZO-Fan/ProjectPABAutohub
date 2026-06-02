@@ -31,12 +31,12 @@ class MyApp extends StatelessWidget {
       title: 'Movie App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-          useMaterial3: true,
-        cardTheme: const CardThemeData(
-          color: Colors.white,
-          surfaceTintColor: Colors.transparent,
-        ),
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: Colors.blue,
       ),
+      scaffoldBackgroundColor: Colors.white,
+    ),
 
       // APP STARTS HERE
       initialRoute: '/',

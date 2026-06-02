@@ -1,3 +1,4 @@
+import 'package:autohub/screens/komentar_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -363,7 +364,72 @@ class _DetailScreenState extends State<DetailScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 20),
+
+              const Text(
+                "Rating & Komentar",
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              Card(
+                color: Colors.grey.shade100,
+                child: Padding(
+                  padding: const EdgeInsets.all(15),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(
+                            Icons.star,
+                            color: Colors.orange,
+                            size: 30,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            "${widget.bengkelData['rating'] ?? 0}/10",
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 15),
+
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue,
+                              foregroundColor: Colors.white,
+                            ),
+                          icon: const Icon(Icons.comment),
+                          label: const Text("Lihat Komentar"),
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => KomentarScreen(
+                                  documentId: widget.documentId,
+                                  namaBengkel:
+                                      widget.bengkelData['nama'] ?? '',
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 30),
           ],
         ),
       ),
