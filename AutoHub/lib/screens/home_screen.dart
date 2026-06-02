@@ -62,11 +62,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         centerTitle: true,
         title: const Text(
           'AutoHub',
@@ -126,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       hintText: 'Cari bengkel...',
                       prefixIcon: const Icon(Icons.search),
                       filled: true,
-                      fillColor: Colors.grey.shade200,
+                      fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide.none,
@@ -238,11 +238,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                   horizontal: 10,
                                   vertical: 4,
                                 ),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.shade100,
-                                  borderRadius:
-                                      BorderRadius.circular(20),
-                                ),
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
                                 child: Text(
                                   data['kategori'] ?? '-',
                                 ),

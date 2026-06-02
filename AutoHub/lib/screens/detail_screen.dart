@@ -87,20 +87,18 @@ class _DetailScreenState extends State<DetailScreen> {
     (widget.bengkelData['longitude'] as num?)?.toDouble() ?? 104.756554;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor:
+    Theme.of(context).colorScheme.surface,
 
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         title: const Text(
           "About",
           style: TextStyle(
-            color: Colors.black,
             fontWeight: FontWeight.bold,
           ),
-        ),
-        iconTheme: const IconThemeData(
-          color: Colors.black,
         ),
       ),
 
@@ -111,7 +109,9 @@ class _DetailScreenState extends State<DetailScreen> {
           children: [
             Container(
               decoration: BoxDecoration(
-                color: Colors.grey.shade200,
+                color: Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(15),
               ),
               child: Column(
@@ -140,9 +140,9 @@ class _DetailScreenState extends State<DetailScreen> {
                             CircleAvatar(
                               backgroundColor: Colors.red,
                               child: IconButton(
-                                icon: const Icon(
+                                icon: Icon(
                                   Icons.call,
-                                  color: Colors.white,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ),
                                 onPressed: () {},
                               ),
@@ -153,9 +153,9 @@ class _DetailScreenState extends State<DetailScreen> {
                             CircleAvatar(
                               backgroundColor: Colors.green,
                               child: IconButton(
-                                icon: const Icon(
+                                icon: Icon(
                                   Icons.chat,
-                                  color: Colors.white,
+                                  color: Theme.of(context).colorScheme.onSurface,
                                 ),
                                 onPressed: () {},
                               ),
@@ -168,7 +168,7 @@ class _DetailScreenState extends State<DetailScreen> {
                         top: 10,
                         right: 10,
                         child: CircleAvatar(
-                          backgroundColor: Colors.white,
+                          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
                           child: isLoading
                               ? const Padding(
                                   padding:
@@ -254,7 +254,9 @@ class _DetailScreenState extends State<DetailScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(15),
               decoration: BoxDecoration(
-                color: Colors.grey.shade200,
+                    color: Theme.of(context)
+                    .colorScheme
+                    .surfaceContainerHighest,
                 borderRadius:
                     BorderRadius.circular(15),
               ),
@@ -280,7 +282,7 @@ class _DetailScreenState extends State<DetailScreen> {
             const SizedBox(height: 10),
 
             Card(
-              color: Colors.grey.shade100,
+              color: Theme.of(context).cardColor,
               child: Padding(
                 padding: const EdgeInsets.all(15),
                 child: Column(
@@ -377,7 +379,7 @@ class _DetailScreenState extends State<DetailScreen> {
               const SizedBox(height: 10),
 
               Card(
-                color: Colors.grey.shade100,
+                color: Theme.of(context).cardColor,
                 child: Padding(
                   padding: const EdgeInsets.all(15),
                   child: Column(
@@ -407,7 +409,7 @@ class _DetailScreenState extends State<DetailScreen> {
                         child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue,
-                              foregroundColor: Colors.white,
+                              foregroundColor: Theme.of(context).colorScheme.onSurface,
                             ),
                           icon: const Icon(Icons.comment),
                           label: const Text("Lihat Komentar"),

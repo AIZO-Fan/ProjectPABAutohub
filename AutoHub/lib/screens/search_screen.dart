@@ -26,13 +26,8 @@ class _SearchScreenState extends State<SearchScreen> {
   final List<String> kategoriList = [
     'Servis Umum',
     'servis motor',
-    'Ganti Oli',
     'Kelistrikan',
-    'Body Repair',
-    'Radiator',
-    'Audio',
     'Ban & Kaki-kaki',
-    'ECU Specialist',
   ];
 
   @override
@@ -91,25 +86,22 @@ class _SearchScreenState extends State<SearchScreen> {
     });
   }
 
-  Widget _buildKategoriChip(
-      String kategori) {
+  Widget _buildKategoriChip(String kategori) {
+    final isSelected = _selectedKategori == kategori;
+
     return FilterChip(
-      label: Text(kategori),
-      selected:
-          _selectedKategori == kategori,
-      selectedColor:
-          Colors.blue.shade600,
-      checkmarkColor: Colors.white,
-      labelStyle: TextStyle(
-        color:
-            _selectedKategori == kategori
-                ? Colors.white
-                : Colors.black,
+      label: Text(
+        kategori,
+        style: TextStyle(
+          color: isSelected ? Colors.white : null,
+        ),
       ),
+      selected: isSelected,
+      selectedColor: Colors.blue,
+      checkmarkColor: Colors.white,
       onSelected: (value) {
         setState(() {
-          _selectedKategori =
-              value ? kategori : null;
+          _selectedKategori = value ? kategori : null;
         });
 
         _filterData();
@@ -232,16 +224,12 @@ class _SearchScreenState extends State<SearchScreen> {
                             horizontal: 8,
                             vertical: 4,
                           ),
-                          decoration:
-                              BoxDecoration(
-                            color: Colors
-                                .blue
-                                .shade50,
-                            borderRadius:
-                                BorderRadius
-                                    .circular(
-                                        20),
-                          ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
                           child: Text(
                             bengkel
                                 .kategori,
@@ -309,10 +297,10 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget build(
       BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
         centerTitle: true,
         title: const Text(
@@ -352,9 +340,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   Icons.search,
                 ),
                 filled: true,
-                fillColor:
-                    Colors.grey
-                        .shade200,
+fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                 border:
                     OutlineInputBorder(
                   borderRadius:

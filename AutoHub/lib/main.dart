@@ -4,6 +4,9 @@ import 'firebase_options.dart';
 
 import 'package:autohub/helpers/scroll_behavior.dart';
 
+import 'package:provider/provider.dart';
+import 'package:autohub/providers/theme_provider.dart';
+import 'package:autohub/providers/language_provider.dart';
 // SCREENS
 import 'package:autohub/screens/splash_screen.dart';
 import 'package:autohub/screens/sign_in_screen.dart';
@@ -18,7 +21,19 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => ThemeProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => LanguageProvider(),
+        ),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -26,19 +41,32 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    final themeProvider = context.watch<ThemeProvider>();
+    final languageProvider = context.watch<LanguageProvider>();
+
     return MaterialApp(
       scrollBehavior: AppScrollBehavior(),
-      title: 'Movie App',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-      useMaterial3: true,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: Colors.blue,
-      ),
-      scaffoldBackgroundColor: Colors.white,
-    ),
 
-      // APP STARTS HERE
+      // DARK MODE
+      themeMode: themeProvider.themeMode,
+
+      theme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.light,
+        colorSchemeSeed: Colors.blue,
+      ),
+
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        colorSchemeSeed: Colors.blue,
+      ),
+
+      // BAHASA
+      locale: languageProvider.locale,
+
       initialRoute: '/',
 
       routes: {

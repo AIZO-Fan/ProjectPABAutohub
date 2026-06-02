@@ -1,3 +1,7 @@
+import 'package:provider/provider.dart';
+import 'package:autohub/providers/theme_provider.dart';
+import 'package:autohub/providers/language_provider.dart';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -75,13 +79,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+  final themeProvider = context.watch<ThemeProvider>();
+  final languageProvider = context.watch<LanguageProvider>();
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: const Text('Profile'),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         centerTitle: true,
       ),
 
@@ -115,6 +121,56 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
             const SizedBox(height: 40),
 
+            const SizedBox(height: 30),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Card(
+                child: Column(
+                  children: [
+
+                    ListTile(
+                      leading: const Icon(Icons.dark_mode),
+                      title: const Text('Dark Mode'),
+                      trailing: Switch(
+                        value: themeProvider.themeMode == ThemeMode.dark,
+                        onChanged: (value) {
+                          themeProvider.toggleTheme(value);
+                        },
+                      ),
+                    ),
+
+                    const Divider(height: 1),
+
+                    ListTile(
+                      leading: const Icon(Icons.language),
+                      title: const Text('Bahasa'),
+                      trailing: DropdownButton<String>(
+                        value: languageProvider.locale.languageCode,
+                        underline: const SizedBox(),
+                        items: const [
+                          DropdownMenuItem(
+                            value: 'id',
+                            child: Text('Indonesia'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'en',
+                            child: Text('English'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            languageProvider.changeLanguage(value);
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 40),
             // ================= TOMBOL LOGOUT =================
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),

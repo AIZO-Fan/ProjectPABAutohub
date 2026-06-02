@@ -168,11 +168,11 @@ await FirebaseFirestore.instance
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        foregroundColor: Theme.of(context).colorScheme.onSurface,
         elevation: 0,
         title: Text(
           "Komentar ${widget.namaBengkel}",
@@ -288,10 +288,10 @@ await FirebaseFirestore.instance
           Container(
             padding: const EdgeInsets.all(15),
             decoration: BoxDecoration(
-              color: Colors.grey.shade100,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               border: Border(
                 top: BorderSide(
-                  color: Colors.grey.shade300,
+                  color: Theme.of(context).colorScheme.outline,
                 ),
               ),
             ),

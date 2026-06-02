@@ -8,7 +8,7 @@ class FavoriteScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -19,7 +19,7 @@ class FavoriteScreen extends StatelessWidget {
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       ),
 
       body: StreamBuilder<QuerySnapshot>(
@@ -135,11 +135,12 @@ class FavoriteScreen extends StatelessWidget {
                                 horizontal: 10,
                                 vertical: 4,
                               ),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade100,
-                                borderRadius:
-                                    BorderRadius.circular(20),
-                              ),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .surfaceContainerHighest,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
                               child: Text(
                                 data['kategori'] ?? '-',
                               ),
