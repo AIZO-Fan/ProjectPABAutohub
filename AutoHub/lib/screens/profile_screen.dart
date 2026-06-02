@@ -139,32 +139,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         },
                       ),
                     ),
-
-                    const Divider(height: 1),
-
-                    ListTile(
-                      leading: const Icon(Icons.language),
-                      title: const Text('Bahasa'),
-                      trailing: DropdownButton<String>(
-                        value: languageProvider.locale.languageCode,
-                        underline: const SizedBox(),
-                        items: const [
-                          DropdownMenuItem(
-                            value: 'id',
-                            child: Text('Indonesia'),
-                          ),
-                          DropdownMenuItem(
-                            value: 'en',
-                            child: Text('English'),
-                          ),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            languageProvider.changeLanguage(value);
-                          }
-                        },
-                      ),
-                    ),
                   ],
                 ),
               ),

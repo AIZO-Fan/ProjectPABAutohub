@@ -2,6 +2,9 @@ import 'package:autohub/screens/komentar_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 
 class DetailScreen extends StatefulWidget {
   final Map<String, dynamic> bengkelData;
@@ -26,6 +29,30 @@ class _DetailScreenState extends State<DetailScreen> {
     super.initState();
     isFavorite = widget.bengkelData['favorite'] ?? false;
   }
+
+Future<void> openWhatsAppFromPhone(String? phone) async {
+  if (phone == null || phone.toString().isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Nomor telepon tidak tersedia')),
+    );
+    return;
+  }
+
+  final formattedPhone = phone.replaceAll(RegExp(r'^0'), '62');
+
+  final Uri url = Uri.parse("https://wa.me/$formattedPhone");
+
+  final canLaunch = await launchUrl(
+    url,
+    mode: LaunchMode.externalApplication,
+  );
+
+  if (!canLaunch) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Tidak bisa membuka WhatsApp')),
+    );
+  }
+}
 
   Future<void> toggleFavorite() async {
     if (isLoading) return;
@@ -137,29 +164,29 @@ class _DetailScreenState extends State<DetailScreen> {
                         left: 10,
                         child: Row(
                           children: [
-                            CircleAvatar(
-                              backgroundColor: Colors.red,
+                           CircleAvatar(
+                              backgroundColor: const Color(0xFF25D366),
                               child: IconButton(
-                                icon: Icon(
-                                  Icons.call,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                icon: const Icon(
+                                  FontAwesomeIcons.whatsapp,
+                                  color: Colors.white,
                                 ),
-                                onPressed: () {},
+                                onPressed: () {
+                                  final phone = widget.bengkelData['telpon'];
+
+                                  if (phone != null && phone.toString().isNotEmpty) {
+                                    openWhatsAppFromPhone(phone);
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('Nomor telepon tidak tersedia'),
+                                      ),
+                                    );
+                                  }
+                                },
                               ),
                             ),
-
                             const SizedBox(width: 10),
-
-                            CircleAvatar(
-                              backgroundColor: Colors.green,
-                              child: IconButton(
-                                icon: Icon(
-                                  Icons.chat,
-                                  color: Theme.of(context).colorScheme.onSurface,
-                                ),
-                                onPressed: () {},
-                              ),
-                            ),
                           ],
                         ),
                       ),
